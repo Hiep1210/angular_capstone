@@ -1,0 +1,215 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Welcome, {{ currentUser?.name }}!</h1>
+    <div class="header-info">
+      <span class="timestamp">{{ getCurrentTime() }}</span>
+      <div class="header-actions">
+        <button 
+          class="btn-primary" 
+          (click)="navigateToProfile()"
+          *appHasPermission="Permission.VIEW_PROFILE"
+        >
+          Profile
+        </button>
+        <button class="btn-danger" (click)="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Permissions Section -->
+  <div class="permissions-section" *ngIf="grantedPermissionDetails.length > 0">
+    <h3>Your Permissions</h3>
+    <div class="permissions-list">
+      <span 
+        *ngFor="let permissionDetail of grantedPermissionDetails" 
+        class="permission-badge"
+        [class]="permissionDetail.badgeColor"
+      >
+        {{ permissionDetail.displayName }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div class="admin-dashboard" *ngIf="currentUser?.role === 'admin'">
+    <h2>Admin Dashboard</h2>
+    
+    <!-- User Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>{{ userStats.totalUsers }}</h3>
+        <p>Total Users</p>
+      </div>
+      <div class="stat-card">
+        <h3>{{ userStats.adminUsers }}</h3>
+        <p>Admin Users</p>
+      </div>
+      <div class="stat-card">
+        <h3>{{ userStats.regularUsers }}</h3>
+        <p>Regular Users</p>
+      </div>
+    </div>
+
+    <!-- User List (Admin Only) -->
+    <div class="user-list-section" *appHasPermission="Permission.EDIT_PERMISSION">
+      <h3>All Users</h3>
+      <div class="user-table">
+        <div class="table-header">
+          <span>Username</span>
+          <span>Name</span>
+          <span>Role</span>
+          <span>Address</span>
+          <span>Permissions</span>
+          <span>Actions</span>
+        </div>
+        <div class="table-row clickable-row" *ngFor="let user of allUsers" (click)="openPermissionEditor(user)">
+          <span>{{ user.username }}</span>
+          <span>{{ user.name }}</span>
+          <span class="role-badge" [class]="user.role">{{ user.role }}</span>
+          <span>{{ user.address }}</span>
+          <span class="permissions-cell">
+            <span 
+              *ngFor="let permission of getUserPermissionDetails(user)" 
+              class="permission-badge small"
+              [class]="permission.badgeColor"
+              [title]="permission.displayName"
+            >
+              {{ permission.displayName }}
+            </span>
+          </span>
+          <span class="actions-cell">
+            <button 
+              class="btn-small btn-primary" 
+              (click)="openPermissionEditor(user); $event.stopPropagation()"
+              title="Edit Permissions"
+            >
+              ✏️ Edit
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Dashboard -->
+  <div class="user-dashboard" *ngIf="currentUser?.role === 'user'">
+    <h2>User Dashboard</h2>
+    
+    <!-- User Information -->
+    <div class="user-info-section">
+      <h3>Your Information</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Username:</label>
+          <span>{{ currentUser?.username }}</span>
+        </div>
+        <div class="info-item">
+          <label>Role:</label>
+          <span class="role-badge" [class]="currentUser?.role">{{ currentUser?.role }}</span>
+        </div>
+        <div class="info-item">
+          <label>Name:</label>
+          <span>{{ currentUser?.name }}</span>
+        </div>
+        <div class="info-item">
+          <label>Address:</label>
+          <span>{{ currentUser?.address }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Dashboard Actions -->
+    <div class="user-actions-section">
+      <h3>Manage Profile</h3>
+      <p>View and edit your personal information</p>
+      <p class="permission-note">(Full access - view and edit)</p>
+    </div>
+  </div>
+
+  <!-- Available Actions -->
+  <div class="actions-section">
+    <h3>Available Actions</h3>
+    <div class="actions-grid">
+      <!-- View Profile Action -->
+      <div class="action-card" *appHasPermission="Permission.VIEW_PROFILE">
+        <div class="action-icon">👁️</div>
+        <h4>View Profile</h4>
+        <p>Access your profile information</p>
+        <button class="btn-primary" (click)="navigateToProfile()">👁️ View Profile</button>
+      </div>
+
+      <!-- Edit Profile Action -->
+      <div class="action-card" *appHasPermission="Permission.EDIT_PROFILE">
+        <div class="action-icon">✏️</div>
+        <h4>Edit Profile</h4>
+        <p>Modify your profile data</p>
+        <button class="btn-success" (click)="navigateToProfile()">✏️ Edit Profile</button>
+      </div>
+
+      <!-- Admin Actions (Edit Permissions) -->
+      <div class="action-card admin-only" *appHasPermission="Permission.EDIT_PERMISSION">
+        <div class="action-icon">🔧</div>
+        <h4>Manage Permissions</h4>
+        <p>Access permission management features</p>
+        <button class="btn-warning" (click)="navigateToProfile()">🔧 Manage Permissions</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+  <!-- Permission Editor Modal -->
+  <div class="modal-overlay" *ngIf="showPermissionEditor" (click)="closePermissionEditor()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Edit Permissions for {{ selectedUser?.name }}</h3>
+        <button class="close-btn" (click)="closePermissionEditor()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="user-info">
+          <p><strong>Username:</strong> {{ selectedUser?.username }}</p>
+          <p><strong>Role:</strong> <span class="role-badge" [class]="selectedUser?.role">{{ selectedUser?.role }}</span></p>
+        </div>
+        
+        <div class="permissions-editor">
+          <h4>Available Permissions</h4>
+          <div class="permission-checkboxes">
+            <div class="permission-checkbox" *ngFor="let permissionDetail of getAllPermissionDetails()">
+              <label>
+                <input 
+                  type="checkbox" 
+                  [checked]="isPermissionSelected(permissionDetail.permission)"
+                  (change)="togglePermission(permissionDetail.permission, $event)"
+                />
+                <span class="permission-badge" [class]="permissionDetail.badgeColor">
+                  {{ permissionDetail.displayName }}
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="permission-preview" *ngIf="selectedUserPermissions.length > 0">
+          <h4>Selected Permissions</h4>
+          <div class="selected-permissions">
+            <span 
+              *ngFor="let permission of getSelectedPermissionDetails()" 
+              class="permission-badge"
+              [class]="permission.badgeColor"
+            >
+              {{ permission.displayName }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closePermissionEditor()">Cancel</button>
+        <button class="btn-primary" (click)="savePermissions()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+

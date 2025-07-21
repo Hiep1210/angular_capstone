@@ -1,0 +1,153 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <h2>User Profile</h2>
+      <div class="header-actions">
+        <button class="btn-secondary" (click)="navigateToDashboard()">Dashboard</button>
+        <button class="btn-danger" (click)="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Show content only if user has view permission -->
+    <div class="profile-content" *appHasPermission="Permission.VIEW_PROFILE">
+      <!-- User Permissions Section -->
+      <div class="permissions-section" *ngIf="grantedPermissionDetails.length > 0">
+        <h3>Your Permissions</h3>
+        <div class="permissions-list">
+          <span 
+            *ngFor="let permissionDetail of grantedPermissionDetails" 
+            class="permission-badge"
+            [class]="permissionDetail.badgeColor"
+          >
+            {{ permissionDetail.displayName }}
+          </span>
+        </div>
+      </div>
+
+      <div class="profile-info">
+        <div class="info-row">
+          <label>Username:</label>
+          <span>{{ currentUser?.username }}</span>
+        </div>
+        
+        <div class="info-row">
+          <label>Role:</label>
+          <span class="role-badge" [class]="currentUser?.role">{{ currentUser?.role }}</span>
+        </div>
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+        <div class="form-group">
+          <label for="name">Full Name:</label>
+          <input 
+            type="text" 
+            id="name" 
+            formControlName="name"
+            class="form-control"
+            [readonly]="!isEditing"
+            [class.readonly]="!isEditing"
+            [class.error]="profileForm.get('name')?.invalid && profileForm.get('name')?.touched"
+          >
+          <div class="error-message" *ngIf="profileForm.get('name')?.invalid && profileForm.get('name')?.touched && isEditing">
+            Full name is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address:</label>
+          <textarea 
+            id="address" 
+            formControlName="address"
+            class="form-control"
+            rows="3"
+            [readonly]="!isEditing"
+            [class.readonly]="!isEditing"
+            [class.error]="profileForm.get('address')?.invalid && profileForm.get('address')?.touched"
+          ></textarea>
+          <div class="error-message" *ngIf="profileForm.get('address')?.invalid && profileForm.get('address')?.touched && isEditing">
+            Address is required
+          </div>
+        </div>
+
+        <div class="message" *ngIf="message" [class]="messageType + '-message'">
+          {{ message }}
+        </div>
+
+        <div class="form-actions">
+          <!-- Show edit button only if user has edit permission -->
+          <button 
+            type="button" 
+            class="btn-primary"
+            (click)="toggleEdit()"
+            *appHasPermission="Permission.EDIT_PROFILE"
+            [style.display]="!isEditing ? 'inline-block' : 'none'"
+          >
+            Edit Profile
+          </button>
+
+          <!-- Show permission message if user cannot edit -->
+          <div class="permission-message" *ngIf="!canEditProfile && !isEditing">
+            <span class="text-muted">You do not have permission to edit your profile</span>
+          </div>
+
+          <div class="edit-actions" *ngIf="isEditing">
+            <button 
+              type="submit" 
+              class="btn-success"
+              [disabled]="profileForm.invalid || isLoading"
+            >
+              <span *ngIf="isLoading">Saving...</span>
+              <span *ngIf="!isLoading">Save Changes</span>
+            </button>
+            <button 
+              type="button" 
+              class="btn-secondary"
+              (click)="toggleEdit()"
+              [disabled]="isLoading"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Admin-only permissions section -->
+      <div class="admin-section" *appHasPermission="Permission.EDIT_PERMISSION">
+        <h3>Permission Management</h3>
+        <div class="admin-info">
+          <p>As an administrator, you have access to all system permissions:</p>
+          
+          <!-- Show all permissions with their status -->
+          <div class="all-permissions-list">
+            <div 
+              *ngFor="let permDetail of getAllPermissions()" 
+              class="permission-item"
+              [class.granted]="permDetail.granted"
+              [class.denied]="!permDetail.granted"
+            >
+              <span 
+                class="permission-badge"
+                [class]="permDetail.badgeColor"
+              >
+                {{ permDetail.displayName }}
+              </span>
+              <span class="permission-status">
+                {{ permDetail.granted ? '✓ Granted' : '✗ Denied' }}
+              </span>
+            </div>
+          </div>
+          
+          <p class="text-muted">Permission management features can be extended here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Access denied message -->
+    <div class="access-denied" *ngIf="currentUser && !canViewProfile">
+      <h3>Access Denied</h3>
+      <p>You do not have permission to view this profile.</p>
+      <button class="btn-primary" (click)="navigateToDashboard()">Return to Dashboard</button>
+    </div>
+  </div>
+</div>
+

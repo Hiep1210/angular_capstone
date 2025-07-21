@@ -1,0 +1,86 @@
+<div class="signup-container">
+  <div class="signup-card">
+    <h2>Sign Up</h2>
+    
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input 
+          type="text" 
+          id="username" 
+          formControlName="username"
+          class="form-control"
+          [class.error]="signupForm.get('username')?.invalid && signupForm.get('username')?.touched"
+        >
+        <div class="error-message" *ngIf="signupForm.get('username')?.invalid && signupForm.get('username')?.touched">
+          <span *ngIf="signupForm.get('username')?.errors?.['required']">Username is required</span>
+          <span *ngIf="signupForm.get('username')?.errors?.['minlength']">Username must be at least 3 characters</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input 
+          type="password" 
+          id="password" 
+          formControlName="password"
+          class="form-control"
+          [class.error]="signupForm.get('password')?.invalid && signupForm.get('password')?.touched"
+        >
+        <div class="error-message" *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched">
+          <span *ngIf="signupForm.get('password')?.errors?.['required']">Password is required</span>
+          <span *ngIf="signupForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="name">Full Name:</label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name"
+          class="form-control"
+          [class.error]="signupForm.get('name')?.invalid && signupForm.get('name')?.touched"
+        >
+        <div class="error-message" *ngIf="signupForm.get('name')?.invalid && signupForm.get('name')?.touched">
+          Full name is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="address">Address:</label>
+        <textarea 
+          id="address" 
+          formControlName="address"
+          class="form-control"
+          rows="3"
+          [class.error]="signupForm.get('address')?.invalid && signupForm.get('address')?.touched"
+        ></textarea>
+        <div class="error-message" *ngIf="signupForm.get('address')?.invalid && signupForm.get('address')?.touched">
+          Address is required
+        </div>
+      </div>
+
+      <div class="error-message" *ngIf="message && messageType === 'error'">
+        {{ message }}
+      </div>
+
+      <div class="success-message" *ngIf="message && messageType === 'success'">
+        {{ message }}
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-primary"
+        [disabled]="signupForm.invalid || isLoading"
+      >
+        <span *ngIf="isLoading">Creating Account...</span>
+        <span *ngIf="!isLoading">Sign Up</span>
+      </button>
+    </form>
+
+    <div class="login-link">
+      <p>Already have an account? <a (click)="navigateToLogin()">Login here</a></p>
+    </div>
+  </div>
+</div>
