@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { 
-  Permission, 
+import {
+  Permission,
   PermissionDetail,
-  UserPermissions, 
-  getPermissionsForRole, 
+  UserPermissions,
+  getPermissionsForRole,
   getPermissionDisplayName,
-  getPermissionBadgeColor 
+  getPermissionBadgeColor
 } from '../models/permission.model';
 import { User } from '../models/user.model';
 
@@ -22,7 +22,7 @@ export class PermissionService {
 
   public currentPermissions$ = this.currentPermissionsSubject.asObservable();
 
-  constructor() {}
+  constructor() { }
 
   // Update permissions based on user role
   updatePermissions(user: User | null): void {
@@ -39,15 +39,38 @@ export class PermissionService {
     }
   }
 
-  // Get current permissions
   getCurrentPermissions(): UserPermissions {
+    const userjson = localStorage.getItem('currentUser');
+    if (!userjson) {
+      // No user found: return all permissions false
+      const emptyPermissions: UserPermissions = {
+        [Permission.VIEW_PROFILE]: false,
+        [Permission.EDIT_PROFILE]: false,
+        [Permission.EDIT_PERMISSION]: false
+      };
+      this.currentPermissionsSubject.next(emptyPermissions);
+      return emptyPermissions;
+    }
+    const user = JSON.parse(userjson);
+    const permissionsInLocalStorage: string[] = user.permissions || [];
+
+    // Build the new permissions map:
+    const permissionsMap = {
+      [Permission.VIEW_PROFILE]: permissionsInLocalStorage.includes(Permission.VIEW_PROFILE),
+      [Permission.EDIT_PROFILE]: permissionsInLocalStorage.includes(Permission.EDIT_PROFILE),
+      [Permission.EDIT_PERMISSION]: permissionsInLocalStorage.includes(Permission.EDIT_PERMISSION)
+    };
+    this.currentPermissionsSubject.next(permissionsMap);
     return this.currentPermissionsSubject.value;
   }
 
   // Check specific permissions
-  hasPermission(permission: Permission): boolean {
-    const permissions = this.getCurrentPermissions();
-    return permissions[permission] || false;
+  hasPermission(permissioninput: Permission): boolean {
+    const userJson = localStorage.getItem('currentUser');
+    if (!userJson) return false;
+    const userInLocal = JSON.parse(userJson);
+    const perissioninlocal = userInLocal.permissions;
+    return perissioninlocal.includes(permissioninput);
   }
 
   // Convenience methods for specific permissions
@@ -86,7 +109,7 @@ export class PermissionService {
     badgeColor: string;
   }> {
     const permissions = this.getCurrentPermissions();
-    
+
     return Object.values(Permission).map(permission => ({
       permission,
       displayName: getPermissionDisplayName(permission),

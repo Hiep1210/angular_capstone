@@ -7,12 +7,12 @@ import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
 import { User } from '../../models/user.model';
 import { Permission } from '../../models/permission.model';
-import { HasPermissionDirective, HasAnyPermissionDirective } from '../../directives/has-permission.directive';
+import { HasPermissionDirective} from '../../directives/has-permission.directive';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective, HasAnyPermissionDirective],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })

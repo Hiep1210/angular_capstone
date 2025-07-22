@@ -7,12 +7,12 @@ import { PermissionService } from '../../services/permission.service';
 import { MockDataService } from '../../services/mock-data.service';
 import { User } from '../../models/user.model';
 import { Permission, PermissionDetail } from '../../models/permission.model';
-import { HasPermissionDirective, HasAnyPermissionDirective } from '../../directives/has-permission.directive';
+import { HasPermissionDirective} from '../../directives/has-permission.directive';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, HasPermissionDirective, HasAnyPermissionDirective],
+  imports: [CommonModule, HasPermissionDirective],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })

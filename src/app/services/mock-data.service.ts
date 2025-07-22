@@ -160,6 +160,14 @@ export class MockDataService {
     const userIndex = this.users.findIndex(user => user.username === username);
     if (userIndex !== -1) {
       this.users[userIndex].permissions = permissions;
+      const currentUserJson = localStorage.getItem('currentUser');
+      if (currentUserJson) {
+        const currentUser = JSON.parse(currentUserJson);
+        if (currentUser.username === username) {
+          currentUser.permissions = permissions;
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+      }
       return true;
     }
     return false;
