@@ -69,7 +69,7 @@
           <span>{{ user.address }}</span>
           <span class="permissions-cell">
             <span 
-              *ngFor="let permission of getUserPermissionDetails(user)" 
+              *ngFor="let permission of grantedPermissionDetails" 
               class="permission-badge small"
               [class]="permission.badgeColor"
               [title]="permission.displayName"

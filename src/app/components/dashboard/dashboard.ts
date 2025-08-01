@@ -7,7 +7,7 @@ import { PermissionService } from '../../services/permission.service';
 import { MockDataService } from '../../services/mock-data.service';
 import { User } from '../../models/user.model';
 import { Permission, PermissionDetail } from '../../models/permission.model';
-import { HasPermissionDirective} from '../../directives/has-permission.directive';
+import { HasPermissionDirective } from '../../directives/has-permission.directive';
 
 @Component({
   selector: 'app-dashboard',
@@ -34,10 +34,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   canViewProfile = false;
   canEditProfile = false;
   canEditPermissions = false;
-  
+
   // Permission enums for template
   Permission = Permission;
-  
+
   // Permission details for UI
   grantedPermissionDetails: Array<{
     permission: Permission;
@@ -52,7 +52,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService,
     private mockDataService: MockDataService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Subscribe to user changes
@@ -152,73 +152,74 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // Permission Editor Methods
-    openPermissionEditor(user: User): void {
-      if (!this.canEditPermissions) {
-        console.warn('User does not have permission to edit permissions');
-        return;
+  openPermissionEditor(user: User): void {
+    if (!this.canEditPermissions) {
+      console.warn('User does not have permission to edit permissions');
+      return;
+    }
+
+    this.selectedUser = user;
+    this.selectedUserPermissions = [...(user.permissions || [])];
+    this.showPermissionEditor = true;
+  }
+
+  closePermissionEditor(): void {
+    this.showPermissionEditor = false;
+    this.selectedUser = null;
+    this.selectedUserPermissions = [];
+  }
+
+  togglePermission(permission: Permission, event: any): void {
+    if (event.target.checked) {
+      if (!this.selectedUserPermissions.includes(permission)) {
+        this.selectedUserPermissions.push(permission);
       }
-      
-      this.selectedUser = user;
-      this.selectedUserPermissions = [...(user.permissions || [])];
-      this.showPermissionEditor = true;
+    } else {
+      this.selectedUserPermissions = this.selectedUserPermissions.filter(p => p !== permission);
     }
-  
-    closePermissionEditor(): void {
-      this.showPermissionEditor = false;
-      this.selectedUser = null;
-      this.selectedUserPermissions = [];
-    }
-  
-    togglePermission(permission: Permission, event: any): void {
-      if (event.target.checked) {
-        if (!this.selectedUserPermissions.includes(permission)) {
-          this.selectedUserPermissions.push(permission);
-        }
+  }
+
+  isPermissionSelected(permission: Permission): boolean {
+    return this.selectedUserPermissions.includes(permission);
+  }
+
+  savePermissions(): void {
+    if (this.selectedUser) {
+      const success = this.mockDataService.updateUserPermissions(
+        this.selectedUser.username,
+        this.selectedUserPermissions
+      );
+
+      if (success) {
+        // Update the local user object
+        this.selectedUser.permissions = [...this.selectedUserPermissions];
+
+        // Refresh the user list
+        this.loadDashboardData();
+
+        // Close the editor
+        this.closePermissionEditor();
+
+        console.log('Permissions updated successfully');
       } else {
-        this.selectedUserPermissions = this.selectedUserPermissions.filter(p => p !== permission);
+        console.error('Failed to update permissions');
       }
     }
-  
-    isPermissionSelected(permission: Permission): boolean {
-      return this.selectedUserPermissions.includes(permission);
-    }
-  
-    savePermissions(): void {
-      if (this.selectedUser) {
-        const success = this.mockDataService.updateUserPermissions(
-          this.selectedUser.username, 
-          this.selectedUserPermissions
-        );
-        
-        if (success) {
-          // Update the local user object
-          this.selectedUser.permissions = [...this.selectedUserPermissions];
-          
-          // Refresh the user list
-          this.loadDashboardData();
-          
-          // Close the editor
-          this.closePermissionEditor();
-          
-          console.log('Permissions updated successfully');
-        } else {
-          console.error('Failed to update permissions');
-        }
-      }
-    }
-  
-    // Helper methods for template
-    getUserPermissionDetails(user: User): PermissionDetail[] {
-      if (!user.permissions) return [];
-      return this.permissionService.getPermissionDetailsByPermissions(user.permissions);
-    }
-  
-    getAllPermissionDetails(): PermissionDetail[] {
-      return this.permissionService.getAllPermissionDetails();
-    }
-  
-    getSelectedPermissionDetails(): PermissionDetail[] {
-      return this.permissionService.getPermissionDetailsByPermissions(this.selectedUserPermissions);
-    }
+  }
+
+  // Helper methods for template
+  getUserPermissionDetails(user: User): PermissionDetail[] {
+    if (!user.permissions) return [];
+    return this.permissionService.getPermissionDetailsByPermissions(user.permissions);
+  }
+
+  getAllPermissionDetails(): PermissionDetail[] {
+    return this.permissionService.getAllPermissionDetails()
+      .filter(permissionDetail => permissionDetail.permission !== Permission.EDIT_PERMISSION);
+  }
+
+  getSelectedPermissionDetails(): PermissionDetail[] {
+    return this.permissionService.getPermissionDetailsByPermissions(this.selectedUserPermissions);
+  }
 }
 
